@@ -4,6 +4,7 @@ int offsetz = 0;
 int rx = 0;
 int ry = 0;
 PFont fpslabel;
+PFont hiShowLabel;
 
 int blockzwidth = 200;
 float v = 16;
@@ -12,15 +13,17 @@ int gap = 400;
 int speed = 30;
 
 Star stars[] = new Star[300];
+HiShow hishows[] = new HiShow[100];
 FrameTimer timer = new FrameTimer(10);
 
 void setup() {
-  size(640, 480, P3D);
-  //size(screen.width, screen.height, P3D);
+  //size(640, 480, P3D);
+  size(screen.width, screen.height, P3D);
   frameRate(60);
   
-  fpslabel = loadFont("Monospaced-16.vlw"); 
-  textFont(fpslabel, 16); 
+  fpslabel = loadFont("Monospaced-16.vlw");
+  //hiShowLabel = loadFont("HiraMinProN-W6-48.vlw");
+  hiShowLabel = createFont("HiraMinProN-W6", 48);
 }
 
 void draw() {
@@ -79,14 +82,28 @@ void draw() {
   
   lights();
 
-  // 星を生成
+//  // 星を生成
+//  if(timer.tick()) {
+//  //if(true) {
+//    int count = 0;
+//    int i = 0;
+//    while(count < 10 && i < stars.length) {
+//      if(stars[i] == null) {
+//        stars[i] = new Star(int(random(-500, 500)), int(random(-200, 200)), -depth, int(random(10, 50)));
+//        count++;
+//      }
+//      i++;
+//    }
+//  }
+  
+  //拝承を生成
   if(timer.tick()) {
   //if(true) {
     int count = 0;
     int i = 0;
-    while(count < 10 && i < stars.length) {
-      if(stars[i] == null) {
-        stars[i] = new Star(int(random(-500, 500)), int(random(-200, 200)), -depth, int(random(10, 50)));
+    while(count < 10 && i < hishows.length) {
+      if(hishows[i] == null) {
+        hishows[i] = new HiShow(int(random(-500, 500)), int(random(-200, 200)), -depth);
         count++;
       }
       i++;
@@ -100,10 +117,24 @@ void draw() {
     }
   }
   
+  // 拝承を描画
+  for(int i = 0; i < hishows.length; i++) {
+    if(hishows[i] != null) {
+      hishows[i].draw();
+    }
+  }
+  
   // 星を移動
   for(int i = 0; i < stars.length; i++) {
     if(stars[i] != null) {
       stars[i].move();
+    }
+  }
+  
+  // 拝承を移動
+  for(int i = 0; i < hishows.length; i++) {
+    if(hishows[i] != null) {
+      hishows[i].move();
     }
   }
   
@@ -116,8 +147,18 @@ void draw() {
     }
   }
   
+  // 星を拝承
+  for(int i = 0; i < hishows.length; i++) {
+    if(hishows[i] != null) {
+      if(hishows[i].z > 1000) {
+        hishows[i] = null;
+      }
+    }
+  }
+  
   popMatrix();
   fill(255);
+  textFont(fpslabel, 16);
   text(frameRate, width-80, 20);
 }
 
@@ -147,8 +188,13 @@ class HiShow {
     noStroke();
     translate(x, y, z);
     fill(c, 220);
-    sphere(r);
+    textFont(hiShowLabel, 48);
+    text("拝承", 100, 20);
     popMatrix();
+  }
+  
+  void move() {
+    z += v;
   }
 }
 
