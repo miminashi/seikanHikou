@@ -12,18 +12,55 @@ int depth = 2000;
 int gap = 400;
 int speed = 30;
 
+//PImage images[] = new PImage[300];
+ArrayList<PImage> images = new ArrayList<PImage>();
+ArrayList<String> names = new ArrayList<String>();
+
+FlyingObject objects[] = new FlyingObject[300];
 Star stars[] = new Star[300];
 HiShow hishows[] = new HiShow[100];
 FrameTimer timer = new FrameTimer(10);
 
+PImage photo;
+
 void setup() {
   //size(640, 480, P3D);
-  size(screen.width, screen.height, P3D);
+  size(displayWidth, displayHeight, P3D);
   frameRate(60);
   
   fpslabel = loadFont("Monospaced-16.vlw");
   //hiShowLabel = loadFont("HiraMinProN-W6-48.vlw");
   hiShowLabel = createFont("HiraMinProN-W6", 48);
+  
+  photo = loadImage("vstokyo_n.jpg");
+  
+  File dir = new File(dataPath("") + "/images");
+  String[] list = dir.list();
+
+  if (list == null) {
+    println("Folder does not exist or cannot be accessed.");
+  } 
+  else {
+//    println(list);
+    for(int i = 0; i < list.length && i < 300; i++) {
+      String filename = list[i];
+      PImage image = loadImage(dir + "/" + filename);
+//      images[i] = image;
+      images.add(image);
+    }
+  }
+  println(images.size());
+  
+//  File namesFile = new File(dataPath("") + "/names.txt");
+  String namesList[] = loadStrings(dataPath("") + "/names.txt");
+  for(int i = 0; i < namesList.length; i++) {
+    String name = namesList[i];
+    names.add(name);
+  }
+//  println("there are " + lines.length + " lines");
+//  for (int i = 0 ; i < lines.length; i++) {
+//    println(lines[i]);
+//  }
 }
 
 void draw() {
@@ -82,7 +119,7 @@ void draw() {
   
   lights();
 
-//  // 星を生成
+  // 星を生成
 //  if(timer.tick()) {
 //  //if(true) {
 //    int count = 0;
@@ -95,18 +132,46 @@ void draw() {
 //      i++;
 //    }
 //  }
-  
-  //拝承を生成
+
+  // generate FlyingObjects
   if(timer.tick()) {
-  //if(true) {
     int count = 0;
     int i = 0;
-    while(count < 10 && i < hishows.length) {
-      if(hishows[i] == null) {
-        hishows[i] = new HiShow(int(random(-500, 500)), int(random(-200, 200)), -depth);
+    while(count < 3 && i < objects.length) {
+      if(objects[i] == null) {
+        int rnd = int(random(30));
+        if(rnd > 0) {
+          String name = names.get(int(random(names.size())));
+          objects[i] = new FlyingText(name, int(random(-500, 500)), int(random(-200, 200)), -depth);
+        }
+        else {
+          PImage image = images.get(int(random(images.size())));
+          objects[i] = new FlyingImage(image, int(random(-500, 500)), int(random(-200, 200)), -depth);
+        }
         count++;
       }
       i++;
+    }
+  }
+  
+//  //拝承を生成
+//  if(timer.tick()) {
+//  //if(true) {
+//    int count = 0;
+//    int i = 0;
+//    while(count < 10 && i < hishows.length) {
+//      if(hishows[i] == null) {
+//        hishows[i] = new HiShow(int(random(-500, 500)), int(random(-200, 200)), -depth);
+//        count++;
+//      }
+//      i++;
+//    }
+//  }
+  
+  // draw FlyingObjects
+  for(int i = 0; i < objects.length; i++) {
+    if(objects[i] != null) {
+      objects[i].draw();
     }
   }
   
@@ -124,6 +189,13 @@ void draw() {
     }
   }
   
+  // move FlyingObjects
+  for(int i = 0; i < objects.length; i++) {
+    if(objects[i] != null) {
+      objects[i].move();
+    }
+  }
+  
   // 星を移動
   for(int i = 0; i < stars.length; i++) {
     if(stars[i] != null) {
@@ -135,6 +207,15 @@ void draw() {
   for(int i = 0; i < hishows.length; i++) {
     if(hishows[i] != null) {
       hishows[i].move();
+    }
+  }
+  
+  // delete FlyingObjects
+  for(int i = 0; i < objects.length; i++) {
+    if(objects[i] != null) {
+      if(objects[i].z > 1000) {
+        objects[i] = null;
+      }
     }
   }
   
@@ -167,6 +248,67 @@ class Grid {
   }
   
   void draw() {
+  }
+}
+
+class FlyingObject {
+  int x;
+  int y;
+  float z;
+  int c;  // color
+  
+  FlyingObject(int _x, int _y, float _z) {
+    x = _x;
+    y = _y;
+    z = _z;
+    c = color(random(200, 255), random(200, 255), random(200, 255));
+  }
+  
+  void draw() {
+    pushMatrix();
+    noStroke();
+    translate(x, y, z);
+    drawContent();
+    popMatrix();
+  }
+  
+  void drawContent() {
+//    image(photo, 0, 0);
+  }
+  
+  void move() {
+    z += v;
+  }
+}
+
+class FlyingText extends FlyingObject {
+  String text;
+  
+  FlyingText(String _text, int _x, int _y, float _z) {
+    super(_x, _y, _z);
+    text = _text;
+  }
+  
+  void drawContent() {
+    fill(c, 220);
+    textFont(hiShowLabel, 60);
+    text(text, 100, 20);
+  }
+}
+
+class FlyingImage extends FlyingObject {
+  PImage image;
+  
+  FlyingImage(PImage _image, int _x, int _y, float _z) {
+    super(_x, _y, _z);
+    image = _image;
+  }
+  
+  void drawContent() {
+//    fill(c, 220);
+//    textFont(hiShowLabel, 48);
+//    text(text, 100, 20);
+    image(image, 0, 0);
   }
 }
 
@@ -246,4 +388,3 @@ class FrameTimer {
     }
   }
 }
-
